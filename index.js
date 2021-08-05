@@ -11,11 +11,12 @@ var correctAnswers = [];
  */
 //  https://opentdb.com/api.php?amount=10
 const getTrivia = async () => {
-  const response = await fetch("data.json");
+  const response = await fetch("https://opentdb.com/api.php?amount=10");
   const data = await response.json();
   return data.results;
 };
 
+// A generator to send questions one at a time.
 function* generator(arr) {
   for (item of arr) {
     yield item;
@@ -24,21 +25,31 @@ function* generator(arr) {
 /**
  *
  * @param {Generator} generate
- * @returns {array} Answers given for all questions
- * @description Generates a question from a generator and saves the answer to an array.
+ * @returns {array} answers given to all questions asked.
+ * @description Generates a question from a generator ```generate``` and saves the answer to an array.
  */
 const setQuestion = (generate) => {
   trivia = generate.next();
   if (trivia.value === undefined) {
     return answersGiven;
   }
+  // Compiles the answers into an array
   options = trivia.value.incorrect_answers;
   options.push(trivia.value.correct_answer);
+  correctAnswers.push(trivia.value.correct_answer)
+
+  // Renders the question to the DOM
   questionElement.innerHTML = trivia.value.question;
 
+  // Renders the answer options of the question to the DOM
   for (answer of options) {
     let button = document.createElement("button");
     button.setAttribute("type", "button");
+    button.innerHTML = answer;
+    answersContainer.appendChild(button);
+
+    // After answering the question.
+    // Clears the previous question and loads the next to the DOM.
     button.addEventListener("click", () => {
       answersGiven.push(event.target.innerHTML);
       while (answersContainer.firstChild) {
@@ -49,15 +60,15 @@ const setQuestion = (generate) => {
         setQuestion(generate);
       }
     });
-    button.innerHTML = answer;
-    answersContainer.appendChild(button);
   }
 };
 
 getTrivia()
   .then((trivia) => {
     setQuestion(generator(trivia));
+    console.log(answersGiven);
   })
   .catch((error) => {
     console.log(error);
   });
+
