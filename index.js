@@ -1,74 +1,99 @@
 var questionElement = document.getElementById("question");
 var answersContainer = document.getElementById("answersContainer");
-var answersGiven = [];
-var correctAnswers = [];
+var numberOfQuestions = 10;
+var score = 0;
 
-/**
- *
- * @param {number} index the number of question needed to be asked
- * @returns {array}  an array of questions, answers and other related data.
- * @description Fetches data from the Open Trivia database using the promise based Fetch API.
- */
 //  https://opentdb.com/api.php?amount=10
 const getTrivia = async () => {
-  const response = await fetch("https://opentdb.com/api.php?amount=10");
+  const response = await fetch("data.json");
   const data = await response.json();
   return data.results;
 };
 
-// A generator to send questions one at a time.
-function* generator(arr) {
-  for (item of arr) {
-    yield item;
+// A questionGenerator to generate questions one at a time.
+function* questionGenerator(arr) {
+  for (question of arr) {
+    yield question;
   }
 }
+
+// Renders the question to the DOM
+const setQuestion = (question) => {
+  questionElement.innerHTML = question;
+};
+
 /**
  *
- * @param {Generator} generate
- * @returns {array} answers given to all questions asked.
- * @description Generates a question from a generator ```generate``` and saves the answer to an array.
+ * @param {*} options
+ * @param {*} status
+ * @param {*} generateQuestion
+ * @description Renders the choices for the question to the DOM.
+ * Binds an event listener to every answer onclick. The listener marks the current question and loads new question
  */
-const setQuestion = (generate) => {
-  trivia = generate.next();
-  if (trivia.value === undefined) {
-    return answersGiven;
-  }
-  // Compiles the answers into an array
-  options = trivia.value.incorrect_answers;
-  options.push(trivia.value.correct_answer);
-  correctAnswers.push(trivia.value.correct_answer)
-
-  // Renders the question to the DOM
-  questionElement.innerHTML = trivia.value.question;
-
-  // Renders the answer options of the question to the DOM
+const setAnswers = (options, status, generateQuestion) => {
+  let correctAnswer = options[options.length - 1];
   for (answer of options) {
     let button = document.createElement("button");
     button.setAttribute("type", "button");
     button.innerHTML = answer;
     answersContainer.appendChild(button);
-
-    // After answering the question.
-    // Clears the previous question and loads the next to the DOM.
     button.addEventListener("click", () => {
-      answersGiven.push(event.target.innerHTML);
-      while (answersContainer.firstChild) {
-        answersContainer.removeChild(answersContainer.lastChild);
-      }
-      questionElement.innerHTML = "";
-      if (!trivia.done) {
-        setQuestion(generate);
-      }
+      score += markQuestion(event.target.innerHTML, correctAnswer);
+      nextQuestion(status, generateQuestion);
     });
   }
 };
 
+// Marks the current question
+const markQuestion = (answerGiven, correctAnswer) => {
+  if (answerGiven === correctAnswer) {
+    return 1;
+  } else {
+    return 0;
+  }
+};
+// Loads the next question
+const nextQuestion = (status, generateQuestion) => {
+  while (answersContainer.firstChild) {
+    answersContainer.removeChild(answersContainer.lastChild);
+  }
+  questionElement.innerHTML = "";
+  if (!status) {
+    main(generateQuestion);
+  }
+};
+
+const loadResults = (numberOfQuestions, score) => {
+  questionElement.innerHTML = "Results";
+  answersContainer.innerHTML = `${score}/${numberOfQuestions}`;
+
+};
+// The main trivia function
+const main = (generateQuestion) => {
+  let triviaData = generateQuestion.next();
+  let data = triviaData.value;
+  let status = triviaData.done;
+
+  // When all the questions have been answered, return the final score
+  if (data === undefined) {
+    loadResults(numberOfQuestions, score);
+    return 0; // exit
+  }
+
+  setQuestion(data.question);
+
+  setAnswers(
+    [...data.incorrect_answers, data.correct_answer],
+    status,
+    generateQuestion
+  );
+};
+
+// Entry point
 getTrivia()
-  .then((trivia) => {
-    setQuestion(generator(trivia));
-    console.log(answersGiven);
+  .then((questionsData) => {
+    main(questionGenerator(questionsData));
   })
   .catch((error) => {
     console.log(error);
   });
-
