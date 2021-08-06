@@ -1,8 +1,16 @@
 var questionElement = document.getElementById("question");
 var answersContainer = document.getElementById("answersContainer");
+var retry = document.getElementById("retry");
+var exit = document.getElementById("exit");
 var numberOfQuestions = 10;
 var score = 0;
 
+// retry.addEventListener("click", () => {
+//   main();
+// });
+// exit.addEventListener("click", () => {
+
+// });
 //  https://opentdb.com/api.php?amount=10
 const getTrivia = async () => {
   const response = await fetch("data.json");
@@ -59,17 +67,16 @@ const nextQuestion = (status, generateQuestion) => {
   }
   questionElement.innerHTML = "";
   if (!status) {
-    main(generateQuestion);
+    trivia(generateQuestion);
   }
 };
 
 const loadResults = (numberOfQuestions, score) => {
   questionElement.innerHTML = "Results";
   answersContainer.innerHTML = `${score}/${numberOfQuestions}`;
-
 };
-// The main trivia function
-const main = (generateQuestion) => {
+// The trivia trivia function
+const trivia = (generateQuestion) => {
   let triviaData = generateQuestion.next();
   let data = triviaData.value;
   let status = triviaData.done;
@@ -90,10 +97,13 @@ const main = (generateQuestion) => {
 };
 
 // Entry point
-getTrivia()
-  .then((questionsData) => {
-    main(questionGenerator(questionsData));
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+function main() {
+  getTrivia()
+    .then((questionsData) => {
+      trivia(questionGenerator(questionsData));
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+main();
