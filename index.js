@@ -5,12 +5,21 @@ var exit = document.getElementById("exit");
 var numberOfQuestions = 10;
 var score = 0;
 
-// retry.addEventListener("click", () => {
-//   main();
-// });
-// exit.addEventListener("click", () => {
+retry.addEventListener("click", () => {
+  while (answersContainer.firstChild) {
+    answersContainer.removeChild(answersContainer.lastChild);
+  }
+  questionElement.innerHTML = "";
+  score = 0;
+  main();
+});
+exit.addEventListener("click", () => {
+  questionElement.innerHTML = "Thank you for playing!";
+  while (answersContainer.firstChild) {
+    answersContainer.removeChild(answersContainer.lastChild);
+  }
 
-// });
+});
 //  https://opentdb.com/api.php?amount=10
 const getTrivia = async () => {
   const response = await fetch("data.json");
