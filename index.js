@@ -4,27 +4,27 @@ var retry = document.getElementById("retry");
 var exit = document.getElementById("exit");
 var numberOfQuestions = 10;
 var score = 0;
-
+// Retry the trivia
 retry.addEventListener("click", () => {
   score = 0;
   main();
 });
-
+// Exit trivia
 exit.addEventListener("click", () => {
   questionElement.innerHTML = "Thank you for playing!";
   while (answersContainer.firstChild) {
     answersContainer.removeChild(answersContainer.lastChild);
   }
 });
-//  https://opentdb.com/api.php?amount=10
+//  Fetch trivia questions from opentdb https://opentdb.com/api.php?amount=10
 const getTrivia = async () => {
-  const response = await fetch("https://opentdb.com/api.php?amount=10");
+  const response = await fetch("data.json");
   // const response = await fetch("data.json");
   const data = await response.json();
   return data.results;
 };
 
-// A questionGenerator to generate questions one at a time.
+// A questionGenerator to generate questions one at a time from an array of questions
 function* questionGenerator(arr) {
   for (question of arr) {
     yield question;
@@ -36,6 +36,8 @@ const setQuestion = (question) => {
   questionElement.innerHTML = question;
 };
 
+// Renders the answers options to the DOM.
+// Waits for an answer then generates the next question.
 const setAnswers = (options, status, generateQuestion) => {
   let correctAnswer = options[options.length - 1];
   for (answer of options) {
@@ -43,12 +45,14 @@ const setAnswers = (options, status, generateQuestion) => {
     button.setAttribute("type", "button");
     button.innerHTML = answer;
     answersContainer.appendChild(button);
+    // Marks the question and loads the next question after answer has been submitted.
     button.addEventListener("click", () => {
       score += markQuestion(event.target.innerHTML, correctAnswer);
       nextQuestion(status, generateQuestion);
     });
   }
 };
+
 // Clears the question and the answers options from the DOM
 const clearQuestionAnswer = () => {
   while (answersContainer.firstChild) {
@@ -72,11 +76,17 @@ const nextQuestion = (status, generateQuestion) => {
   }
 };
 
+// Loads the final results after all questions have been answered 
 const loadResults = (numberOfQuestions, score) => {
   questionElement.innerHTML = "Results";
   answersContainer.innerHTML = `${score}/${numberOfQuestions}`;
 };
-// The trivia trivia function
+
+// The main function of the trivia
+// 1. Generates a single question.
+// 2. Clear Question and answers from the DOM if any
+// 3. Sets the question visible on the DOM
+// 4. Sets the answers in the DOM
 const trivia = (generateQuestion) => {
   let triviaData = generateQuestion.next();
   let data = triviaData.value;
@@ -85,7 +95,7 @@ const trivia = (generateQuestion) => {
   // When all the questions have been answered, return the final score
   if (data === undefined) {
     loadResults(numberOfQuestions, score);
-    return 0; // exit
+    return; // exit
   }
   clearQuestionAnswer();
   setQuestion(data.question);
@@ -106,4 +116,5 @@ function main() {
       console.log(error);
     });
 }
+
 main();
