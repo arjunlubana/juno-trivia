@@ -18,8 +18,8 @@ exit.addEventListener("click", () => {
 });
 //  Fetch trivia questions from opentdb https://opentdb.com/api.php?amount=10
 const getTrivia = async () => {
-  const response = await fetch("data.json");
-  // const response = await fetch("data.json");
+  const response = await fetch("https://opentdb.com/api.php?amount=10");
+  // const response = await fetch("");
   const data = await response.json();
   return data.results;
 };
